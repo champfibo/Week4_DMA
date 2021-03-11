@@ -102,7 +102,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1, ADCData, 4);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,6 +110,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  if (HAL_GetTick() == ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%10000 )
+	  		{
+		  a=3;
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	  		}
 
 
     /* USER CODE BEGIN 3 */
@@ -301,7 +306,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -328,26 +333,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if(GPIO_Pin == GPIO_PIN_13)
 	{
 
+		ButtonTimeStamp = HAL_GetTick();
+		SwitchState[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+		if(SwitchState[0] == GPIO_PIN_RESET && SwitchState[1] == GPIO_PIN_SET)
+						{
 				a=1;
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 			ButtonTimeStamp = HAL_GetTick();
 
-		 if (HAL_GetTick() == ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%1000 )
-		{
-			a=3;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-			if(SwitchState[0] == GPIO_PIN_RESET && SwitchState[1] == GPIO_PIN_SET)
-									{
+
+						}
+		SwitchState[1] = SwitchState[0];
+
+			if(SwitchState[0] == GPIO_PIN_SET && SwitchState[1] == GPIO_PIN_RESET)
+						{
 				TimeHand = HAL_GetTick()-ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%1000 ;
 				ButtonTimeStamp = HAL_GetTick();
 						}
 			SwitchState[1] = SwitchState[0];
 
+			}
+
 		}
-						}
-}
-
-
 
 
 
