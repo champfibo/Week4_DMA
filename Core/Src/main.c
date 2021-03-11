@@ -102,6 +102,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1, ADCData, 4);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,6 +110,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
 
     /* USER CODE BEGIN 3 */
 
@@ -199,7 +201,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -303,7 +305,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -325,26 +327,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_13)
 	{
-		ButtonTimeStamp = HAL_GetTick();
-		SwitchState[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-		if(SwitchState[0] == GPIO_PIN_RESET && SwitchState[1] == GPIO_PIN_SET)
-						{
+
 				a=1;
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 			ButtonTimeStamp = HAL_GetTick();
 
-						}
-		if (HAL_GetTick() == ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%1000 )
+		 if (HAL_GetTick() == ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%1000 )
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-			if(SwitchState[0] == GPIO_PIN_SET && SwitchState[1] == GPIO_PIN_RESET)
+			a=3;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+			if(SwitchState[0] == GPIO_PIN_RESET && SwitchState[1] == GPIO_PIN_SET)
 									{
 				TimeHand = HAL_GetTick()-ButtonTimeStamp + 1000 + ((22695477 * ADCData[0])+ ADCData[1])%1000 ;
-									}
+				ButtonTimeStamp = HAL_GetTick();
+						}
+			SwitchState[1] = SwitchState[0];
 
 		}
-	}
+						}
 }
+
+
+
+
+
+
 /* USER CODE END 4 */
 
 /**
