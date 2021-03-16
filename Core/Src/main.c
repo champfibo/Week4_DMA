@@ -46,12 +46,17 @@ DMA_HandleTypeDef hdma_adc1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint16_t ButtonTimeStamp =0;
-uint16_t TimeHand =0;
-uint16_t SwitchState[2]={0};
-uint32_t randomtime =0;
+uint32_t ADCData[4] = {0};
+
+
+
+uint32_t randomtime = 0;
+uint32_t ButtonTimeStamp =0;
+uint32_t TimeHand =0;
+uint32_t SwitchState[2]={0};
 int a=0;
-uint32_t ADCData[4]={0};
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,19 +113,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if(a==1)
+	  {
+		  if (HAL_GetTick() >= ButtonTimeStamp + randomtime)
+		  {
+
+			  a=2;
+
+		   	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		   	  ButtonTimeStamp = HAL_GetTick();
+		  }
+	  }
+
+
     /* USER CODE END WHILE */
-if(a ==1){
 
-
-	  if (HAL_GetTick() == ButtonTimeStamp + randomtime )
-	  	  	  		{
-	  	  		  a=2;
-	  	  		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	  	  		ButtonTimeStamp = HAL_GetTick();
-	  	  	  		}
-}
     /* USER CODE BEGIN 3 */
-
   }
   /* USER CODE END 3 */
 }
@@ -208,7 +216,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -312,7 +320,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -332,28 +340,27 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+
 	if(GPIO_Pin == GPIO_PIN_13)
+	{
+		SwitchState[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+
+		randomtime = 1000 + ((22695477 * ADCData[0])+ ADCData[1]) % 10000 ;
+		//SwitchState[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+		if(SwitchState[0] == GPIO_PIN_RESET )
 		{
+			a=1;
 
-			SwitchState[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-			SwitchState[1] = SwitchState[0];
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+			ButtonTimeStamp = HAL_GetTick();
 
-			randomtime = 1000 + ((22695477 * ADCData[0])+ ADCData[1]) % 10000 ;
-			if(SwitchState[0] == GPIO_PIN_RESET && SwitchState[1] == GPIO_PIN_SET)
-							{
-					a=1;
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-				ButtonTimeStamp = HAL_GetTick();
-
-
-							}
-
-			if(SwitchState[0] == GPIO_PIN_SET && SwitchState[1] == GPIO_PIN_SET && a==2)
-			  {
-			   a=3;
-			   TimeHand = HAL_GetTick() - ButtonTimeStamp;
-				}
-}
+		}
+		if(SwitchState[0] == GPIO_PIN_SET  && a==2)
+		{
+			a=3;
+			TimeHand = HAL_GetTick() - ButtonTimeStamp;
+		}
+	}
 }
 /* USER CODE END 4 */
 
